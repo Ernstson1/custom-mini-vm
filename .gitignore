@@ -53,3 +53,25 @@ dkms.conf
 
 # debug information files
 *.dwo
+
+# CMake build files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+build/
+
+# VSCode
+.vscode/
+.cache
+
+# Vim
+*.swp
+*.swo
+
+# MacOS
+.DS_Store
+
+# Tests
+tests/*.o
+tests/*.out
