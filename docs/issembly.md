@@ -14,14 +14,14 @@ The language is intentionally minimal, strict, and unambiguous.
 - The assembler performs strict validation; invalid programs are rejected
 
 ### Examples
-``` 
+```asm
 ADD R1, R2, R3
 MOV R0, 10
 PRINT R3
 HALT
 ```
 Invalid: 
-```
+```asm
 ADD R1 R2 R3      ; missing commas
 SUB R2, R1 R4    ; missing comma
 ```
@@ -40,11 +40,11 @@ SUB R2, R1 R4    ; missing comma
 For all arithmetic instructions:  
 The destination register is always the last operand.  
 Example: 
-```
+```asm
 ADD R1, R2, R3
 ```
 Semantics:
-```
+```asm
 R3 = R1 + R2
 ```
 
@@ -60,7 +60,7 @@ R3 = R1 + R2
 
 ### 4.1 MOV
 
-```
+```asm
 MOV Rn, imm
 ```
 Loads and immediate value into a register
@@ -69,21 +69,21 @@ Loads and immediate value into a register
 
 ### 4.2 ADD
 
-```
+```asm
 ADD R1, R2, R3
 ```
 Add R2 from R1 and store result in R3
 
 ### 4.2 SUB
 
-```
+```asm
 SUB R1, R2, R3
 ```
 subtract R2 from R1 and store result in R3
 
 
 ### 4.4 PRINT
-```
+```asm
 PRINT Rn
 ```
 Print the stored value in the register to standart output.
@@ -91,7 +91,7 @@ Print the stored value in the register to standart output.
 - Intended to print the result during debugging
 
 ### 4.5 HALT
-```
+```asm
 HALT
 ```
 Terminates the program execution
