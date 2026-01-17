@@ -60,6 +60,7 @@ CMakeCache.txt
 cmake_install.cmake
 Makefile
 build/
+compile_commands.json
 
 # VSCode
 .vscode/
