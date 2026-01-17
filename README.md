@@ -1,29 +1,75 @@
-# Custom Mini VM  
-A custom minimal virtual machine written in C, designed to execute a small, stack-based instruction set. 
-This project allows you to write simple programs in a text-based “assembly-like” language, which the VM parses, interprets, and executes.  
+# Custom Mini VM
 
-The VM features a program counter, a small number of registers, a stack for function calls,
-and basic instructions such as arithmetic operations, jumps, and subroutine calls.
-It is structured to separate parsing, instruction memory, and execution logic, 
-providing a clear foundation for extending the system with additional instructions, 
-memory handling, or even binary bytecode support in the future.
+A small, system-level virtual machine written in C.
 
+The VM executes programs written in a custom assembly-like language called **Issembly**.
+It is designed as a learning and experimentation platform for virtual machines,
+instruction sets, and low-level execution models.
+
+The project emphasizes:
+- clear separation between parsing, program representation, and execution
+- explicit VM state (registers, stack, program counter)
+- strict validation and deterministic behavior
+
+---
+
+## Issembly
+
+**Issembly** is a minimal, strict, assembly-like language designed specifically for this VM.
+It is intentionally simple and unambiguous to make parsing and execution predictable.
+
+Only a small instruction set is currently supported, focusing on arithmetic,
+basic I/O, and program termination.
+
+For the full language specification, syntax rules, and instruction semantics, see:
+
+➡ **[Issembly Language Specification](docs/issembly.md)**
+
+---
+
+## Example
+
+```asm
+MOV R1, 10
+MOV R2, 32
+ADD R1, R2, R3
+PRINT R3
+HALT
+```
+output: 
+```
+42
+```
 ## Features
+### Current
 
-### Core Features
-- Text-based program loader for assembly-like source files
-- Program counter (PC)–driven execution model
-- Small register set for temporary values
-- Stack-based execution with support for subroutines
-- Basic instruction set (arithmetic, control flow, output)
+- Text-based loader for Issembly source files
+- Program counter–driven execution model
+- Fixed-size register file
+- Stack support for subroutines (work in progress)
 - Fetch–decode–execute execution loop
-- Clear separation between parsing, program memory, and execution
+- Strict parse-time and runtime validation
+- Clean separation between:
+    - parser
+    - program representation
+    - VM execution core
 
-### Planned / Future Features
-- Labels and jump instructions (`JMP`, conditional jumps)
-- CALL / RET instructions with call stack support
-- Improved error handling and validation during parsing and execution
-- Optional memory instructions (`LOADM`, `STOREM`)
-- Binary bytecode format for faster execution
-- Execution debugging (step mode, register/stack inspection)
-- Performance optimizations and cleaner instruction encoding
+### Planned
+- Labels and control flow instructions (JMP, JZ, JNZ)
+- Subroutine support (CALL, RET)
+- Improved runtime error reporting
+- Optional memory instructions
+- Binary bytecode format
+- Debug / trace mode
+- Cleaner instruction encoding and optimizations  
+
+## Project Goals
+This project is primarily educational and exploratory.
+It aims to provide a technically correct foundation for:
+
+- understanding VM internals
+- instruction set design
+- low-level execution models in C
+
+It is not intended to be compatible with any real assembly language.
+
