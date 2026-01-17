@@ -1,4 +1,8 @@
-typedef enum {
+#ifndef INSTRUCTION_H
+#define INSTRUCTION_H
+
+typedef enum
+{
     OP_MOV,
     OP_ADD,
     OP_SUB,
@@ -7,9 +11,12 @@ typedef enum {
     OP_UNKNOWN
 } OpCode;
 
-typedef struct {
+typedef struct
+{
     OpCode opcode;
     int a; // t.ex. register eller adress
     int b; // t.ex. register eller immediate
     int c; // t.ex. register
 } Instruction;
+
+#endif // INSTRUCTION_H
