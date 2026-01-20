@@ -31,10 +31,12 @@ VmResult vm_run(VM* vm, const Program* program)
             break;
         case OP_ADD:
             vm->regs[inst.c] = vm->regs[inst.a] + vm->regs[inst.b];
+            vm->zero_flag = (inst.c == 0) ? 1 : 0;
             vm->pc++;
             break;
         case OP_SUB:
             vm->regs[inst.c] = vm->regs[inst.a] - vm->regs[inst.b];
+            vm->zero_flag = (inst.c == 0) ? 1 : 0;
             vm->pc++;
             break;
         case OP_PRINT:
