@@ -49,7 +49,7 @@ int main(int argc, char* argv[])
 
     vm_init(&vm);
     VmResult res = vm_run(&vm, &vm_program);
-    if (res == VM_OK)
+    if (res == VM_HALTED)
         printf("Program done\n");
     else if (res == VM_ERR_INVALID_OPCODE)
     printf("Wrong opcoden\n");

@@ -24,7 +24,8 @@ typedef enum {
     VM_ERR_INVALID_OPCODE,
     VM_ERR_INVALID_REGISTER,
     VM_ERR_STACK_OVERFLOW,
-    VM_ERR_STACK_UNDERFLOW
+    VM_ERR_STACK_UNDERFLOW,
+    VM_EOF
 } VmResult;
 
 void vm_init(VM* vm);
