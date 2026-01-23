@@ -13,40 +13,47 @@ The language is intentionally minimal, strict, and unambiguous.
 - Empty lines are allowed
 - The assembler performs strict validation; invalid programs are rejected
 
-### Examples
+### Valid Examples
 ```asm
 ADD R1, R2, R3
 MOV R0, 10
 PRINT R3
 HALT
 ```
-Invalid: 
+
+### Invalid Examples
 ```asm
-ADD R1 R2 R3      ; missing commas
-SUB R2, R1 R4    ; missing comma
+ADD R1 R2 R3      ; Invalid: missing commas between operands
+SUB R2, R1 R4     ; Invalid: missing comma before R4
+add R1, R2, R3    ; Invalid: lowercase instruction
+ADD R8, R1, R2    ; Invalid: R8 does not exist (only R0-R7)
 ```
 ## 2. Registers
 
 - The VM provides 8 general-purpose registers
-- Valid registers are R0 through R7
-- Registers outside this range are invalid and cause a parse-time error
+- Valid registers are: `R0`, `R1`, `R2`, `R3`, `R4`, `R5`, `R6`, `R7`
+- Any register reference outside this range (e.g., `R8`, `R-1`, `R10`) is rejected as a **parse-time error**
+- The program will not execute if it contains invalid register references
 
 ## 3. Operands and Semantics
-- Operand Types
-- Register: `R<number>`
-- Immediate: signed 32-bit integer
+
+### Operand Types
+- **Register**: `R<number>` where number is 0-7
+- **Immediate**: A signed 32-bit integer literal (e.g., `42`, `-10`, `0`)
 
 ### Destination Rule
-For all arithmetic instructions:  
-The destination register is always the last operand.  
+For all arithmetic instructions, the **destination register is always the last operand**.  
+
 Example: 
 ```asm
 ADD R1, R2, R3
 ```
-Semantics:
-```asm
+
+**Semantics**: 
+```
 R3 = R1 + R2
 ```
+The VM reads from R1 and R2, computes the sum, and writes the result to R3.
 
 ## 4. Instruction Set
 ### Instruction Overview
@@ -63,48 +70,111 @@ R3 = R1 + R2
 ```asm
 MOV Rn, imm
 ```
-Loads and immediate value into a register
-- imm must fit in a signed 32-bit integer
+Loads an immediate value into a register.
+
+- `imm` must fit in a signed 32-bit integer
 - The destination register is overwritten
+- **MOV does not modify any flags**
 
 ### 4.2 ADD
 
 ```asm
 ADD R1, R2, R3
 ```
-Add R2 from R1 and store result in R3
+Adds R1 and R2, and stores the result in R3.
 
-### 4.2 SUB
+**Semantics**: `R3 = R1 + R2`
+
+- **Updates the zero flag (Z)** if the result is zero
+
+### 4.3 SUB
 
 ```asm
 SUB R1, R2, R3
 ```
-subtract R2 from R1 and store result in R3
+Subtracts R2 from R1, and stores the result in R3.
+
+**Semantics**: `R3 = R1 - R2`
+
+- **Updates the zero flag (Z)** if the result is zero
 
 
 ### 4.4 PRINT
+
 ```asm
 PRINT Rn
 ```
-Print the stored value in the register to standart output.
+Prints the value stored in register `Rn` to standard output.
+
 - Output is written to `stdout`
-- Intended to print the result during debugging
+- Intended for debugging and inspecting register values during execution
+- **Does not modify any flags**
 
 ### 4.5 HALT
+
 ```asm
 HALT
 ```
-Terminates the program execution
+Terminates program execution.
+
 - Takes no operands
-- Marks normal program completion
+- Marks **normal program completion**
+- Sets the VM execution status to `HALTED`
+- **Does not modify any flags**
 
 
-## 5. Error Handlig
-- The assembler rejects programs containing:
+## 5. Flags
+
+The VM maintains a set of status flags that are updated by certain instructions.
+
+### Zero Flag (Z)
+- Set to `1` if the result of an operation is zero
+- Set to `0` otherwise
+
+**Instructions that update the Zero Flag**:
+- `ADD`
+- `SUB`
+
+**Instructions that do NOT modify flags**:
+- `MOV`
+- `PRINT`
+- `HALT`
+
+## 6. Program Termination
+
+Programs can terminate in two ways:
+
+### Normal Termination (HALT)
+- The program executes a `HALT` instruction
+- VM status: `HALTED`
+- This is the expected way for a program to finish
+
+### End-of-File Termination (EOF)
+- The program counter reaches the end of the instruction list without encountering `HALT`
+- VM status: `EOF`
+- This indicates the program ended without explicitly halting
+
+Both termination modes stop execution. The distinction is useful for tooling, testing, and future bytecode formats.
+
+## 7. Error Handling
+
+Errors are categorized into two types:
+
+### Parse-Time Errors
+The parser rejects programs containing:
 - Unknown instructions
-- Invalid or out-of-range registers
-- Invalid immediate values
+- Invalid or out-of-range registers (e.g., `R8`, `R-1`)
+- Invalid immediate values (e.g., non-numeric literals)
 - Missing or extra operands
 - Missing commas between operands
-- Operands containing unexpected whitespace
-- Programs that fail validation are not executed by the VM.
+- Syntax errors (e.g., lowercase instructions)
+
+**Programs that fail parsing are not executed by the VM.**
+
+### Runtime Errors
+The VM may encounter errors during execution:
+- Integer overflow (currently not checked, future consideration)
+- Invalid memory access (not applicable in current design)
+- Stack underflow/overflow (for future CALL/RET instructions)
+
+**Runtime errors stop VM execution immediately.**
