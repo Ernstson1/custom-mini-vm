@@ -13,6 +13,6 @@
 
 OpCode get_opcode(const char* token);
 
-void parse_lines(char lines[][MAX_LEN], size_t line_count, Program* vm_program);
+int parse_lines(char lines[][MAX_LEN], size_t line_count, Program* vm_program);
 
 #endif // PARSER_H

@@ -11,6 +11,7 @@
 #include "program.h"
 
 #define MAX_LEN 50
+#define MAX_REG_COUNT 8
 
 OpCode get_opcode(const char* token)
 {
@@ -42,10 +43,25 @@ int parse_int(const char* s, int* out)
         return 0;
 
     *out = (int)val;
+
     return 1;
 }
 
-void parse_lines(char lines[][MAX_LEN], size_t line_count, Program* vm_program)
+int parse_register(const char* s, int* out)
+{
+    if (s == NULL || s[0] != 'R')
+        return 0;
+
+    if (!parse_int(s + 1, out))
+        return 0;
+
+    if (*out < 0 || *out >= MAX_REG_COUNT)
+        return 0;
+    
+    return 1; 
+}
+
+int parse_lines(char lines[][MAX_LEN], size_t line_count, Program* vm_program)
 {
     for (size_t i = 0; i < line_count; i++)
     {
@@ -69,44 +85,44 @@ void parse_lines(char lines[][MAX_LEN], size_t line_count, Program* vm_program)
         {
         case OP_MOV:
             // MOV Rn, value
-            if (!parse_int(tokens[1] + 1, &instr.a))
+            if (!parse_register(tokens[1], &instr.a))
             {
-                printf("Invalid registers at line: %lu\n", line_count + 1);
-                return;
+                printf("Invalid value at line: %lu\n", line_count + 1);
+                return 1;
             }
 
             if (!parse_int(tokens[2], &instr.b))
             {
                 printf("Invalid immediate at line: %lu\n", line_count + 1);
-                return;
+                return 1;
             }
             break;
 
         case OP_ADD:
         case OP_SUB:
             // ADD Rd, Rs1, Rs2
-            if (!parse_int(tokens[1] + 1, &instr.a))
+            if (!parse_register(tokens[1], &instr.a))
             {
-                printf("Invalid registers at line: %lu\n", line_count + 1);
-                return;
+                printf("Invalid value at line: %lu\n", line_count + 1);
+                return 1;
             }
-            if (!parse_int(tokens[2] + 1, &instr.b))
+            if (!parse_register(tokens[2], &instr.b))
             {
-                printf("Invalid registers at line: %lu\n", line_count + 1);
-                return;
+                printf("Invalid value at line: %lu\n", line_count + 1);
+                return 1;
             }
-            if (!parse_int(tokens[3] + 1, &instr.c))
+            if (!parse_register(tokens[3], &instr.c))
             {
-                printf("Invalid registers at line: %lu\n", line_count + 1);
-                return;
+                printf("Invalid value at line: %lu\n", line_count + 1);
+                return 1;
             }
             break;
 
         case OP_PRINT:
-            if (!parse_int(tokens[1] + 1, &instr.a))
+            if (!parse_register(tokens[1], &instr.a))
             {
                 printf("Invalid registers at line: %lu\n", line_count + 1);
-                return;
+                return 1;
             }
             break;
 
@@ -125,4 +141,6 @@ void parse_lines(char lines[][MAX_LEN], size_t line_count, Program* vm_program)
         vm_program->program[vm_program->program_size] = instr;
         (vm_program->program_size)++;
     }
+
+    return 0;
 }

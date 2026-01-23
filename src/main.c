@@ -43,7 +43,12 @@ int main(int argc, char* argv[])
     fclose(file);
 
     // pars each line using the parser into a list of instructions
-    parse_lines(lines, line, &vm_program);
+    int pars_res = parse_lines(lines, line, &vm_program);
+
+    if (pars_res == 1){
+        printf("ERROR when parsing code");
+        return 1;
+    }
 
     VM vm;
 
@@ -59,6 +64,11 @@ int main(int argc, char* argv[])
     {
         printf("Program done\n");
         return 0;
+    }
+    else if (res == VM_ERR_INVALID_REGISTER)
+    {
+        printf("Invalid register\n");
+        return 1;
     }
     else if (res == VM_ERR_INVALID_OPCODE)
     {
