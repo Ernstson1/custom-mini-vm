@@ -115,6 +115,7 @@ void parse_lines(char lines[][MAX_LEN], size_t line_count, Program* vm_program)
 
         case OP_UNKNOWN:
             printf("Error parsing: Unknown opcode at %lu\n", line_count + 1);
+            break;
 
         default:
             printf("Error parsing: Unspecified error at %lu\n", line_count + 1);
