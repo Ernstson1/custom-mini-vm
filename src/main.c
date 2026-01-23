@@ -51,6 +51,9 @@ int main(int argc, char* argv[])
     VmResult res = vm_run(&vm, &vm_program);
     if (res == VM_OK)
         printf("Program done\n");
+    else if (res == VM_ERR_INVALID_OPCODE)
+    printf("Wrong opcoden\n");
+        return 1;
 
     return 0;
 }
