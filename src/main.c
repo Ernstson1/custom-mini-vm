@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
     int pars_res = parse_lines(lines, line, &vm_program);
 
     if (pars_res == 1){
-        printf("ERROR when parsing code");
+        printf("ERROR when parsing code\n");
         return 1;
     }
 

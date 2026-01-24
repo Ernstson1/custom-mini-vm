@@ -47,18 +47,44 @@ int parse_int(const char* s, int* out)
     return 1;
 }
 
+
 int parse_register(const char* s, int* out)
 {
-    if (s == NULL || s[0] != 'R')
+    if (!s || s[0] != 'R')
         return 0;
 
-    if (!parse_int(s + 1, out))
+    char buf[16];
+    strncpy(buf, s, sizeof(buf) - 1);
+    buf[sizeof(buf) - 1] = '\0';
+
+    size_t len = strlen(buf);
+    if (len < 2)
+        return 0;
+
+    // ta bort valfritt trailing comma
+    if (buf[len - 1] == ',')
+    {
+        buf[len - 1] = '\0';
+        len--;
+        if (len < 2)   // "R," är ogiltigt
+            return 0;
+    }
+
+    if (!parse_int(buf + 1, out))
         return 0;
 
     if (*out < 0 || *out >= MAX_REG_COUNT)
         return 0;
-    
-    return 1; 
+
+    return 1;
+}
+
+int parse_register_comma_required(const char* s, int* out)
+{
+    size_t n = s ? strlen(s) : 0;
+    if (n < 2 || s[n - 1] != ',')
+        return 0;
+    return parse_register(s, out); // parse_register ovan accepterar komma
 }
 
 int parse_lines(char lines[][MAX_LEN], size_t line_count, Program* vm_program)
@@ -67,11 +93,11 @@ int parse_lines(char lines[][MAX_LEN], size_t line_count, Program* vm_program)
     {
         char* tokens[4];
         int token_count = 0;
-        char* tok = strtok(lines[i], " ,");
+        char* tok = strtok(lines[i], " ");
         while (tok && token_count < 4)
         {
             tokens[token_count++] = tok;
-            tok = strtok(NULL, " ,");
+            tok = strtok(NULL, " ");
         }
 
         if (token_count == 0)
@@ -85,15 +111,15 @@ int parse_lines(char lines[][MAX_LEN], size_t line_count, Program* vm_program)
         {
         case OP_MOV:
             // MOV Rn, value
-            if (!parse_register(tokens[1], &instr.a))
+            if (!parse_register_comma_required(tokens[1], &instr.a))
             {
-                printf("Invalid value at line: %lu\n", line_count + 1);
+                printf("PARSTIME[MOV]Invalid value at line: %lu\n", i + 1);
                 return 1;
             }
 
             if (!parse_int(tokens[2], &instr.b))
             {
-                printf("Invalid immediate at line: %lu\n", line_count + 1);
+                printf("PARSTIME[MOV]Invalid immediate at line: %lu\n", i + 1);
                 return 1;
             }
             break;
@@ -101,27 +127,28 @@ int parse_lines(char lines[][MAX_LEN], size_t line_count, Program* vm_program)
         case OP_ADD:
         case OP_SUB:
             // ADD Rd, Rs1, Rs2
-            if (!parse_register(tokens[1], &instr.a))
+            if (!parse_register_comma_required(tokens[1], &instr.a))
             {
-                printf("Invalid value at line: %lu\n", line_count + 1);
+                printf("PARSTIME[ADD/SUB]Invalid value at line: %lu\n", i + 1);
                 return 1;
             }
-            if (!parse_register(tokens[2], &instr.b))
+            if (!parse_register_comma_required(tokens[2], &instr.b))
             {
-                printf("Invalid value at line: %lu\n", line_count + 1);
+                printf("PARSTIME[ADD/SUB]Invalid value at line: %lu\n", i + 1);
                 return 1;
             }
             if (!parse_register(tokens[3], &instr.c))
             {
-                printf("Invalid value at line: %lu\n", line_count + 1);
+                printf("PARSTIME[ADD/SUB]Invalid value at line: %lu\n", i + 1);
                 return 1;
             }
             break;
 
         case OP_PRINT:
+            // PRINT Rn
             if (!parse_register(tokens[1], &instr.a))
             {
-                printf("Invalid registers at line: %lu\n", line_count + 1);
+                printf("PARSTIME[PRINT]Invalid registers at line: %lu\n", i + 1);
                 return 1;
             }
             break;
