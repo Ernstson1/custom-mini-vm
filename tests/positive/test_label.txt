@@ -1,0 +1,3 @@
+start:
+MOV R0, 42
+HALT

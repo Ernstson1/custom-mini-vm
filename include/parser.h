@@ -8,6 +8,7 @@
 
 #include "instruction.h"
 #include "program.h"
+#include "symbol_table.h"
 
 #define MAX_LEN 50
 
@@ -22,10 +23,12 @@ typedef enum {
 } ParserResult;
 
 typedef struct{
+    SymbolTable t;
     int last_line;
 
 } Parser;
 
+int parser_init(Parser *p, SymbolTable *t);
 OpCode get_opcode(const char* token);
 
 ParserResult parse_lines(Parser* parser, char lines[][MAX_LEN], size_t line_count, Program* vm_program);

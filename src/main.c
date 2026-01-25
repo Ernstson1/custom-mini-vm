@@ -6,6 +6,7 @@
 #include "logger.h"
 #include "parser.h"
 #include "program.h"
+#include "symbol_table.h"
 #include "vm.h"
 
 #define MAX_LINE 1000
@@ -50,6 +51,14 @@ int main(int argc, char* argv[])
 
     // ========= COMPILE TIME =========
     Parser parser;
+    SymbolTable table;
+    symtab_init(&table);
+
+    if (parser_init(&parser, &table) == 0){
+        log_msg(&log, LOG_ERROR, "Failed to init parser");
+        return 1;
+    }
+    
     ParserResult pars_res = parse_lines(&parser, lines, line, &vm_program);
 
     switch (pars_res)

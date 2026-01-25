@@ -1,6 +1,5 @@
 #include "parser.h"
 #include <errno.h>
-
 #include <limits.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -9,13 +8,30 @@
 
 #include "instruction.h"
 #include "program.h"
-#include "vm.h"
+#include "symbol_table.h"
 
 #define MAX_LEN 50
 #define MAX_REG_COUNT 8
 
+int parser_init(Parser* p, SymbolTable* t)
+{
+    if (!p)
+        return 0;
+
+    if (!t)
+        return 0;
+
+    p->t = *t;
+    return 1;
+}
+
 OpCode get_opcode(const char* token)
 {
+    size_t len = token ? strlen(token) : 0;
+    // Label syntax: name:
+    if (len > 0 && token[len - 1] == ':')
+        return LABEL;
+
     if (strcmp(token, "MOV") == 0)
         return OP_MOV;
     if (strcmp(token, "ADD") == 0)
@@ -26,6 +42,8 @@ OpCode get_opcode(const char* token)
         return OP_PRINT;
     if (strcmp(token, "HALT") == 0)
         return OP_HALT;
+    if (strcmp(token, "JMP") == 0)
+        return OP_JMP;
     return OP_UNKNOWN;
 }
 
@@ -106,10 +124,30 @@ ParserResult parse_lines(Parser* parser, char lines[][MAX_LEN], size_t line_coun
 
         Instruction instr;
         instr.opcode = get_opcode(tokens[0]);
-        instr.a = instr.b = instr.c = 0;
 
         // Store 1-based source line number for user-facing errors
         parser->last_line = i + 1;
+
+        // Labels are not instructions: they do not emit code and do not advance PC.
+        if (instr.opcode == LABEL)
+        {
+            const size_t tlen = strlen(tokens[0]);
+            // Must be at least "a:" (2 chars)
+            if (tlen < 2 || tokens[0][tlen - 1] != ':')
+                return PARSER_ERR_INVALID_VALUE;
+
+            // Strip trailing ':'
+            tokens[0][tlen - 1] = '\0';
+
+            // Store current instruction index as label target
+            const size_t pc = vm_program->program_size;
+            if (!symtab_add(&parser->t, tokens[0], pc))
+                return PARSER_ERR_INVALID_VALUE; // duplicate label / table full / key too long
+
+            continue;
+        }
+
+        instr.a = instr.b = instr.c = 0;
 
         switch (instr.opcode)
         {
@@ -150,7 +188,6 @@ ParserResult parse_lines(Parser* parser, char lines[][MAX_LEN], size_t line_coun
                 return PARSER_ERR_INVALID_REGISTER;
             }
             break;
-
         case OP_HALT:
             break;
 

@@ -8,6 +8,8 @@ typedef enum
     OP_SUB,
     OP_PRINT,
     OP_HALT,
+    OP_JMP,
+    LABEL,
     OP_UNKNOWN
 } OpCode;
 
