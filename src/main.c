@@ -45,8 +45,9 @@ int main(int argc, char* argv[])
     // pars each line using the parser into a list of instructions
     int pars_res = parse_lines(lines, line, &vm_program);
 
-    if (pars_res == 1){
-        printf("ERROR when parsing code\n");
+    if (pars_res == 1)
+    {
+        fprintf(stderr, "ERROR when parsing code\n");
         return 1;
     }
 
@@ -55,26 +56,30 @@ int main(int argc, char* argv[])
     vm_init(&vm);
     VmResult res = vm_run(&vm, &vm_program);
 
-    if (res == VM_HALTED)
+    switch (res)
     {
-        printf("Program done\n");
+    case VM_HALTED:
         return 0;
-    }
-    else if (res == VM_EOF)
-    {
-        printf("Program done\n");
+    case VM_EOF:
+        fprintf(stderr, "VM finished without HALT\n");
         return 0;
-    }
-    else if (res == VM_ERR_INVALID_REGISTER)
-    {
-        printf("Invalid register\n");
+    case VM_ERR_PC_OOB:
+        fprintf(stderr, "[ERROR] VM finished with PC out-of-bounds error\n");
+        return 1;
+    case VM_ERR_INVALID_OPCODE:
+        fprintf(stderr, "[ERROR] VM finished with invalid opcode error\n");
+        return 1;
+    case VM_ERR_INVALID_REGISTER:
+        fprintf(stderr, "[ERROR] VM finished with invalid register error\n");
+        return 1;
+    case VM_ERR_STACK_OVERFLOW:
+        fprintf(stderr, "[ERROR] VM finished with stack-overflow error\n");
+        return 1;
+    case VM_ERR_STACK_UNDERFLOW:
+        fprintf(stderr, "[ERROR] VM finished with stack-underflow error\n");
+        return 1;
+    default:
+        fprintf(stderr, "[ERROR] Unknown VM result\n");
         return 1;
     }
-    else if (res == VM_ERR_INVALID_OPCODE)
-    {
-        printf("Wrong opcode\n");
-        return 1;
-    }
-
-    return 1;
 }
