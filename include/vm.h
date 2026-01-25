@@ -18,7 +18,6 @@ typedef struct{
 
 
 typedef enum {
-    VM_OK = 0,
     VM_HALTED,
     VM_ERR_PC_OOB,
     VM_ERR_INVALID_OPCODE,
