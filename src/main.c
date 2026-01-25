@@ -3,16 +3,22 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "logger.h"
 #include "parser.h"
 #include "program.h"
 #include "vm.h"
 
 #define MAX_LINE 1000
+#define MAX_LEN 50
 
 #define MAX_PROGRAM 100
 
 int main(int argc, char* argv[])
 {
+    // Init Logger
+    Logger log;
+    log_init(&log, stderr, LOG_INFO);
+
     if (argc < 2)
     {
         fprintf(stderr, "Usage: %s <program_file>\n", argv[0]);
@@ -42,44 +48,72 @@ int main(int argc, char* argv[])
     // read.
     fclose(file);
 
-    // pars each line using the parser into a list of instructions
-    int pars_res = parse_lines(lines, line, &vm_program);
+    // ========= COMPILE TIME =========
+    Parser parser;
+    ParserResult pars_res = parse_lines(&parser, lines, line, &vm_program);
 
-    if (pars_res == 1)
+    switch (pars_res)
     {
-        fprintf(stderr, "ERROR when parsing code\n");
+    case PARSER_OK:
+        break;
+    case PARSER_ERR_INVALID_VALUE:
+        log_msg(&log, LOG_ERROR, "Parser failed: invalid value at line %zu", parser.last_line);
+        return 1;
+    case PARSER_ERR_INVALID_REGISTER:
+        log_msg(&log, LOG_ERROR, "Parser failed: invalid register at line %zu", parser.last_line);
+        return 1;
+    case PARSER_ERR_INVALID_IMMEDIATE:
+        log_msg(&log, LOG_ERROR, "Parser failed: invalid immediate at line %zu", parser.last_line);
+        return 1;
+    case PARSER_ERR_UNKNOWN_OPCODE:
+        log_msg(&log, LOG_ERROR, "Parser failed: invalid opcode at line %zu", parser.last_line);
+        return 1;
+    case PARSER_ERR_PROGRAM_TOO_LARGE:
+        log_msg(&log, LOG_ERROR, "Parser failed: Program to large at line %zu", parser.last_line);
+        return 1;
+    case PARSER_ERR_UNKNOWN_ERROR:
+        log_msg(&log, LOG_ERROR, "Parser failed: unknown error at line %zu", parser.last_line);
         return 1;
     }
 
     VM vm;
-
     vm_init(&vm);
+    
+    // ========= RUN TIME =========
+
     VmResult res = vm_run(&vm, &vm_program);
 
     switch (res)
     {
     case VM_HALTED:
         return 0;
+
     case VM_EOF:
-        fprintf(stderr, "VM finished without HALT\n");
+        log_msg(&log, LOG_WARN, "VM finished without HALT");
         return 0;
+
     case VM_ERR_PC_OOB:
-        fprintf(stderr, "[ERROR] VM finished with PC out-of-bounds error\n");
+        log_msg(&log, LOG_ERROR, "VM failed: PC out of bounds at pc=%zu", vm.fetch_pc);
         return 1;
+
     case VM_ERR_INVALID_OPCODE:
-        fprintf(stderr, "[ERROR] VM finished with invalid opcode error\n");
+        log_msg(&log, LOG_ERROR, "VM failed: invalid opcode at pc=%zu", vm.fetch_pc);
         return 1;
+
     case VM_ERR_INVALID_REGISTER:
-        fprintf(stderr, "[ERROR] VM finished with invalid register error\n");
+        log_msg(&log, LOG_ERROR, "VM failed: invalid register index at pc=%zu", vm.fetch_pc);
         return 1;
+
     case VM_ERR_STACK_OVERFLOW:
-        fprintf(stderr, "[ERROR] VM finished with stack-overflow error\n");
+        log_msg(&log, LOG_ERROR, "VM failed: stack overflow at pc=%zu", vm.fetch_pc);
         return 1;
+
     case VM_ERR_STACK_UNDERFLOW:
-        fprintf(stderr, "[ERROR] VM finished with stack-underflow error\n");
+        log_msg(&log, LOG_ERROR, "VM failed: stack underflow at pc=%zu", vm.fetch_pc);
         return 1;
+
     default:
-        fprintf(stderr, "[ERROR] Unknown VM result\n");
+        log_msg(&log, LOG_ERROR, "VM failed: unknown result code (%d)", (int)res);
         return 1;
     }
 }

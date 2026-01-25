@@ -9,6 +9,7 @@
 
 #include "instruction.h"
 #include "program.h"
+#include "vm.h"
 
 #define MAX_LEN 50
 #define MAX_REG_COUNT 8
@@ -47,7 +48,6 @@ int parse_int(const char* s, int* out)
     return 1;
 }
 
-
 int parse_register(const char* s, int* out)
 {
     if (!s || s[0] != 'R')
@@ -66,7 +66,7 @@ int parse_register(const char* s, int* out)
     {
         buf[len - 1] = '\0';
         len--;
-        if (len < 2)   // "R," är ogiltigt
+        if (len < 2) // "R," är ogiltigt
             return 0;
     }
 
@@ -87,7 +87,8 @@ int parse_register_comma_required(const char* s, int* out)
     return parse_register(s, out); // parse_register ovan accepterar komma
 }
 
-int parse_lines(char lines[][MAX_LEN], size_t line_count, Program* vm_program)
+ParserResult parse_lines(Parser* parser, char lines[][MAX_LEN], size_t line_count,
+                         Program* vm_program)
 {
     for (size_t i = 0; i < line_count; i++)
     {
@@ -107,20 +108,21 @@ int parse_lines(char lines[][MAX_LEN], size_t line_count, Program* vm_program)
         instr.opcode = get_opcode(tokens[0]);
         instr.a = instr.b = instr.c = 0;
 
+        // Store 1-based source line number for user-facing errors
+        parser->last_line = i + 1;
+
         switch (instr.opcode)
         {
         case OP_MOV:
             // MOV Rn, value
             if (!parse_register_comma_required(tokens[1], &instr.a))
             {
-                printf("PARSTIME[MOV]Invalid value at line: %lu\n", i + 1);
-                return 1;
+                return PARSER_ERR_INVALID_REGISTER;
             }
 
             if (!parse_int(tokens[2], &instr.b))
             {
-                printf("PARSTIME[MOV]Invalid immediate at line: %lu\n", i + 1);
-                return 1;
+                return PARSER_ERR_INVALID_IMMEDIATE;
             }
             break;
 
@@ -129,18 +131,15 @@ int parse_lines(char lines[][MAX_LEN], size_t line_count, Program* vm_program)
             // ADD Rd, Rs1, Rs2
             if (!parse_register_comma_required(tokens[1], &instr.a))
             {
-                printf("PARSTIME[ADD/SUB]Invalid value at line: %lu\n", i + 1);
-                return 1;
+                return PARSER_ERR_INVALID_REGISTER;
             }
             if (!parse_register_comma_required(tokens[2], &instr.b))
             {
-                printf("PARSTIME[ADD/SUB]Invalid value at line: %lu\n", i + 1);
-                return 1;
+                return PARSER_ERR_INVALID_REGISTER;
             }
             if (!parse_register(tokens[3], &instr.c))
             {
-                printf("PARSTIME[ADD/SUB]Invalid value at line: %lu\n", i + 1);
-                return 1;
+                return PARSER_ERR_INVALID_REGISTER;
             }
             break;
 
@@ -148,8 +147,7 @@ int parse_lines(char lines[][MAX_LEN], size_t line_count, Program* vm_program)
             // PRINT Rn
             if (!parse_register(tokens[1], &instr.a))
             {
-                printf("PARSTIME[PRINT]Invalid registers at line: %lu\n", i + 1);
-                return 1;
+                return PARSER_ERR_INVALID_REGISTER;
             }
             break;
 
@@ -157,17 +155,18 @@ int parse_lines(char lines[][MAX_LEN], size_t line_count, Program* vm_program)
             break;
 
         case OP_UNKNOWN:
-            printf("Error parsing: Unknown opcode at %lu\n", line_count + 1);
-            break;
+            return PARSER_ERR_UNKNOWN_OPCODE;
 
         default:
-            printf("Error parsing: Unspecified error at %lu\n", line_count + 1);
-            break;
+            return PARSER_ERR_UNKNOWN_ERROR;
         }
+
+        if (vm_program->program_size >= MAX_PROGRAM)
+            return PARSER_ERR_PROGRAM_TOO_LARGE;
 
         vm_program->program[vm_program->program_size] = instr;
         (vm_program->program_size)++;
     }
 
-    return 0;
+    return PARSER_OK;
 }

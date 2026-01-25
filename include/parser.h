@@ -11,8 +11,23 @@
 
 #define MAX_LEN 50
 
+typedef enum {
+    PARSER_OK,
+    PARSER_ERR_INVALID_VALUE,
+    PARSER_ERR_INVALID_REGISTER,
+    PARSER_ERR_INVALID_IMMEDIATE,
+    PARSER_ERR_UNKNOWN_OPCODE,
+    PARSER_ERR_PROGRAM_TOO_LARGE,
+    PARSER_ERR_UNKNOWN_ERROR
+} ParserResult;
+
+typedef struct{
+    int last_line;
+
+} Parser;
+
 OpCode get_opcode(const char* token);
 
-int parse_lines(char lines[][MAX_LEN], size_t line_count, Program* vm_program);
+ParserResult parse_lines(Parser* parser, char lines[][MAX_LEN], size_t line_count, Program* vm_program);
 
 #endif // PARSER_H

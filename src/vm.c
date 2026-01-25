@@ -31,7 +31,7 @@ VmResult vm_run(VM* vm, const Program* program)
 
         // get the instruction
         const Instruction* inst = &program->program[vm->pc];
-        size_t fetch_pc = vm->pc;
+        vm->fetch_pc = vm->pc;
         vm->pc++;
         int result;
 
@@ -40,7 +40,6 @@ VmResult vm_run(VM* vm, const Program* program)
         case OP_MOV:
             if (!check_register(inst->a))
             {
-                printf("[RUNTIME] ERROR: Invalid register %zu\n", fetch_pc);
                 return VM_ERR_INVALID_REGISTER;
             }
             vm->regs[inst->a] = inst->b;
@@ -49,17 +48,14 @@ VmResult vm_run(VM* vm, const Program* program)
         case OP_ADD:
             if (!check_register(inst->a))
             {
-                printf("[RUNTIME] ERROR: Invalid register %zu\n", fetch_pc);
                 return VM_ERR_INVALID_REGISTER;
             }
             if (!check_register(inst->b))
             {
-                printf("[RUNTIME] ERROR: Invalid register %zu\n", fetch_pc);
                 return VM_ERR_INVALID_REGISTER;
             }
             if (!check_register(inst->c))
             {
-                printf("[RUNTIME] ERROR: Invalid register %zu\n", fetch_pc);
                 return VM_ERR_INVALID_REGISTER;
             }
             result = vm->regs[inst->a] + vm->regs[inst->b];
@@ -70,17 +66,14 @@ VmResult vm_run(VM* vm, const Program* program)
         case OP_SUB:
             if (!check_register(inst->a))
             {
-                printf("[RUNTIME] ERROR: Invalid register %zu\n", fetch_pc);
                 return VM_ERR_INVALID_REGISTER;
             }
             if (!check_register(inst->b))
             {
-                printf("[RUNTIME] ERROR: Invalid register %zu\n", fetch_pc);
                 return VM_ERR_INVALID_REGISTER;
             }
             if (!check_register(inst->c))
             {
-                printf("[RUNTIME] ERROR: Invalid register %zu\n", fetch_pc);
                 return VM_ERR_INVALID_REGISTER;
             }
 
@@ -92,7 +85,6 @@ VmResult vm_run(VM* vm, const Program* program)
         case OP_PRINT:
             if (!check_register(inst->a))
             {
-                printf("[RUNTIME] ERROR: Invalid register %zu\n", fetch_pc);
                 return VM_ERR_INVALID_REGISTER;
             }
 
@@ -103,10 +95,10 @@ VmResult vm_run(VM* vm, const Program* program)
             return VM_HALTED;
 
         default:
-            printf("Unknown OpCode: Error at line %zu\n", fetch_pc);
             return VM_ERR_INVALID_OPCODE;
         }
     }
 
-    return VM_EOF;
+    if(vm->pc == program->program_size) return VM_EOF;
+    return VM_ERR_PC_OOB;
 }

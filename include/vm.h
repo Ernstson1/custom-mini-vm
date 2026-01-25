@@ -11,7 +11,7 @@ typedef struct{
     int32_t regs[VM_REG_COUNT];
     size_t pc;
     int zero_flag;
-
+    size_t fetch_pc;
     int32_t stack[VM_STACK_SIZE];
     size_t sp;
 } VM;
